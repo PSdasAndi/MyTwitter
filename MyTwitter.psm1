@@ -194,7 +194,7 @@ Function Get-MyTwitterConfiguration {
 	param ()
 	process {
 		$RegKey = 'HKCU:\Software\MyTwitter'
-		if (!(Test-Path -Path $RegKey)) {
+		if ($IsLinux) {
 			Write-Verbose "No MyTwitter configuration found in registry"
 			if ($env:OS -ne "Windows_NT") {
 				Write-Verbose "Trying to import XML File"
