@@ -196,6 +196,10 @@ Function Get-MyTwitterConfiguration {
 		$RegKey = 'HKCU:\Software\MyTwitter'
 		if (!(Test-Path -Path $RegKey)) {
 			Write-Verbose "No MyTwitter configuration found in registry"
+			if ($env:OS -ne "Windows_NT") {
+				Write-Verbose "Trying to import XML File"
+				$Output = Get-MyTwitterConfigurationLinux
+			}
 		} else {
 			$Values = 'APIKey', 'APISecret', 'AccessToken', 'AccessTokenSecret'
 			$Output = @{ }
@@ -206,32 +210,26 @@ Function Get-MyTwitterConfiguration {
 					$Output.$Value = ''
 				}
 			}
-			[pscustomobject]$Output
 		}
+		[pscustomobject]$Output
 	}
 }
 
-Function Remove-MyTwitterConfiguration {
-	<#
-	.SYNOPSIS
-		This function removes the Twitter API Application settings from the registry.
-	.EXAMPLE
-		PS> Remove-MyTwitterConfiguration
-	
-		This example will remove all (if any) MyTwitter configuration values
-		from the registry.
-	#>
-	
-	[CmdletBinding()]
-	param ()
-	process {
-		$RegKey = 'HKCU:\Software\MyTwitter'
-		if (!(Test-Path -Path $RegKey)) {
-			Write-Verbose "No MyTwitter configuration found in registry"
-		} else {
-			Remove-Item $RegKey -Force
+function Get-MyTwitterConfigurationLinux {
+	param(
+		# Path to the XML containing the MyTwitter Secrets
+		[Parameter()]
+		[string]$Path = ".\MyTwitter.xml"
+	)
+	if (!(Test-Path $Path)) {Write-Verbose "No XML file has been found under $Path"}
+	else {
+		$Values = Import-Clixml $Path
+		$Keys = 'APIKey', 'APISecret', 'AccessToken', 'AccessTokenSecret'
+		foreach ($Key in $Keys) {
+			If (!($Values.$Key)) { Write-Verbose "No Value $($Values.$Key)"}
 		}
 	}
+	$Values	
 }
 
 function Add-SpecialCharacters {
